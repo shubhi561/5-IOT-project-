@@ -1,0 +1,93 @@
+#include<SoftwareSerial.h>
+
+SoftwareSerial bluetooth(12,13);
+//SoftwareSerial esp8266(3,4);
+
+
+//#define SSID "BETAGAMERS"
+//#define PASS "1341275433"
+
+int light1, light2;
+
+//String sendAT(String command, const int timeout){
+//  String response = "";
+//  esp.print(command);
+//  long int current_time = millis();
+//  while(millis()-current_time < timeout){
+//    while(esp.available()){
+//      char c = esp.read();
+//      response += c;
+//    }
+//  }
+//  Serial.print(response);
+//  return response;
+//}
+
+void setup(){
+  // put your setup code here, to run once:
+  bluetooth.begin(9600);
+  Serial.begin(9600);
+  //esp.begin(9600);
+  
+//  sendAT("AT\r\n",1000);
+//  sendAT("AT+CWMODE=1\r\n",1000);
+//  sendAT("AT+CWJAP=\""SSID"\",\""PASS"\"\r\n",2000);
+//  while(!esp.find("OK")){
+//  }
+//  sendAT("AT+CIFSR\r\n",1000);
+//  sendAT("AT+CIPMUX=0\r\n",1000);
+  
+  pinMode(8,OUTPUT);
+  pinMode(9,OUTPUT);
+  Serial.println("Try to Control using Bluetooth");
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  bluetooth.listen();
+  if(bluetooth.available()){ 
+    char bt = bluetooth.read();
+    switch (bt){
+      case 'A':
+        digitalWrite(9,LOW);
+        light1 = 0;
+        break;
+      
+      case 'a':
+        digitalWrite(9,HIGH);
+        light1 = 1;
+        break;
+      
+      case 'B':
+        digitalWrite(8,LOW);
+        light2 = 0;
+        break;
+      
+      case 'b':
+        digitalWrite(8,HIGH);
+        light2 = 1;
+        break;
+    }
+    String light1_status = String(light1);
+    String light2_status = String(light2);
+    //updateTS(light1_status,light2_status);    
+  }  
+}
+
+//void updateTS(String A, String B){
+//  esp.listen();
+//  Serial.println("");
+//  
+//  sendAT("AT+CIPSTART=\"TCP\",\"api.thingspeak.com\",80\r\n",1000);
+//  //delay(2000);
+//  
+//  String cmd = "GET /update?key=Z108012PQ5I8IW4W&field1="+A+"&field2="+B+"\r\n";
+//  String cmdlen = String(cmd.length());
+//  sendAT("AT+CIPSEND="+cmdlen+"\r\n",2000);
+//  
+//  esp.print(cmd);
+//  Serial.println("");
+//  
+//  sendAT("AT+CIPCLOSE\r\n",2000);
+//  Serial.println("");
+//}
