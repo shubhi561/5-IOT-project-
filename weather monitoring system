@@ -1,0 +1,115 @@
+#include<SoftwareSerial.h>
+#include<dht.h>
+dht DHT;
+int a;
+String temp;
+String humid;
+
+
+SoftwareSerial esp(0,1);
+#define SSID "betagamers"
+#define PASS "1341275433"
+
+/*
+ * Function to send AT commands to ESP8266
+ */
+void sendAT(String cmd)
+{
+  Serial.print("SEND:");
+  esp.println(cmd);
+  Serial.println(cmd);
+ }
+
+ /*
+  * Fuvnction to connect to wifi network
+  */
+boolean connectwifi()
+{
+  Serial.println("AT+CWMODE=1");
+  delay(2000);
+  Serial.println("AT+CWLAP=1");
+  String cmd="AT+CWJAP=\""SSID"\",\""PASS"\"";
+  sendAT(cmd);
+  delay(5000);
+ if(Serial.find("Error"))
+ {
+  Serial.println("Recieved: Error couldn't connect to network");
+  return false;
+ }
+ else
+ {
+  Serial.println("Wifi connected \n");
+ }
+ cmd="AT+CIPMUX=0";
+ sendAT(cmd);
+ if(Serial.find("Error"))
+ {
+  esp.print("Recieved Error");
+  return false;
+  }
+}
+/*
+ * Function to initialise arduino and ESP8266 communication
+ */
+void setup() 
+{
+  // put your setup code here, to run once:
+Serial.begin(115200);
+esp.begin(115200);
+sendAT("AT");
+delay(5000);
+if(Serial.find("OK"))
+{
+  Serial.print("Recieved: OK)\n ESP ready to send data\n ");
+  connectwifi();
+}
+}
+/*
+ * Function to read data from DHT11 sensor
+ */
+void loop()
+{
+  // put your main code here, to run repeatedly:
+a=DHT.read11(5);
+temp=DHT.temperature;
+humid=DHT.humidity;
+Serial.print("Temperature:");
+Serial.println(temp);
+Serial.print("Humidity:");
+Serial.println(humid);
+Serial.print("\n");
+updateTs(temp,humid);
+delay(3000);
+}
+/*
+ * Function to update Thingspeak channel
+ */
+ void updateTs(String T, String H)
+ {
+  String cmd="AT+CIPSTART=\"TCP\",\"api.thingspeak.com\",80";
+  sendAT(cmd);
+  delay(2000);
+  if(Serial.find("Error"))
+  {
+    Serial.print("Recieved: Error\n EXIT1");
+    return;
+  }
+  cmd="GET /update?key=BZWKL57LN0910WCZ&field1="+T+"&field2="+H+"\r\n";
+ Serial.print("AT+CIPSEND=");
+ Serial.println(cmd.length());
+ if(Serial.find(">"))
+ {
+  esp.print(">");
+  esp.print(cmd);
+  Serial.println(cmd);
+ }
+ else
+ {
+  sendAT("AT+CIPCLOSE");
+ }
+ if(Serial.find("Error"))
+ {
+  Serial.print("Recieved: Error \n EXIT2");
+ }
+Serial.println();
+}
